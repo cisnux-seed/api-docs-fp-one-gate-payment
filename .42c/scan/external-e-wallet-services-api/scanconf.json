@@ -1,0 +1,592 @@
+{
+    "version": "2.0.0",
+    "runtimeConfiguration": {
+        "environment": "default",
+        "laxTestingModeEnabled": false,
+        "apiConnectivityCheck": true,
+        "logLevel": "error",
+        "logDestination": "stdout+platform",
+        "logMaxFileSize": 2147483648,
+        "requestHeaderNameRequestId": "x-scan-request-id",
+        "requestHeaderNameScenarioId": "x-scan-scenario-id",
+        "requestHeaderNameRequestType": "x-scan-request-type",
+        "requestFlowrate": 100,
+        "requestTimeout": 30,
+        "requestTlsInsecureSkipVerify": true,
+        "responseFollowRedirection": false,
+        "responseMaxBodySizeScan": 10485760,
+        "happyPathOnly": false,
+        "maxRequestRetryAttempts": 5,
+        "maxScanDuration": 1800,
+        "memoryLimit": 2147483648,
+        "memoryTimeSpan": 10,
+        "reportMaxRequestSizeHappyPath": 8092,
+        "reportMaxRequestSizeTest": 8092,
+        "reportIncludeRequestBody": true,
+        "reportIncludeResponseBody": true,
+        "reportMaxHttpResponseSizeHappyPath": 8092,
+        "reportMaxBodySizeHappyPath": 8092,
+        "reportMaxHttpResponseSizeTest": 8092,
+        "reportMaxBodySizeTest": 8092,
+        "reportIssuesOnly": false,
+        "reportMaxIssues": 1000,
+        "reportMaxSize": 20971520,
+        "reportGenerateCurlCommand": true,
+        "normalizeServerUrls": true
+    },
+    "customizations": {
+        "happyPaths": {
+            "retry": 1,
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            },
+            "httpStatusExpected": []
+        },
+        "tests": {
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            }
+        }
+    },
+    "authenticationDetails": [
+        {
+            "gopayAuth": {
+                "type": "bearer",
+                "default": "gopayAuth",
+                "credentials": {
+                    "gopayAuth": {
+                        "description": "gopayAuth security",
+                        "credential": "{{gopayAuth}}"
+                    }
+                }
+            },
+            "ovoAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "default": "ovoAuth",
+                "credentials": {
+                    "ovoAuth": {
+                        "description": "ovoAuth security",
+                        "credential": "{{ovoAuth}}"
+                    }
+                }
+            },
+            "shopeeAuth": {
+                "type": "bearer",
+                "default": "shopeeAuth",
+                "credentials": {
+                    "shopeeAuth": {
+                        "description": "shopeeAuth security",
+                        "credential": "{{shopeeAuth}}"
+                    }
+                }
+            }
+        }
+    ],
+    "operations": {
+        "/gopay/auth/token:post": {
+            "operationId": "/gopay/auth/token:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1gopay~1auth~1token:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/gopay/auth/token:post",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/gopay/auth/token",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "client_id": "gopay_client_123",
+                                "client_secret": "secret_key_456",
+                                "grant_type": "client_credentials",
+                                "scope": "payment:read payment:write"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "400": {
+                        "expectations": {
+                            "httpStatus": 400
+                        }
+                    }
+                }
+            }
+        },
+        "/gopay/wallet/balance:get": {
+            "operationId": "/gopay/wallet/balance:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1gopay~1wallet~1balance:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/gopay/wallet/balance:get",
+                "auth": [
+                    "gopayAuth"
+                ],
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/gopay/wallet/balance",
+                        "method": "GET",
+                        "queries": [
+                            {
+                                "key": "wallet_id",
+                                "value": "gopay_wallet_789"
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "401": {
+                        "expectations": {
+                            "httpStatus": 401
+                        }
+                    }
+                }
+            }
+        },
+        "/gopay/wallet/topup:post": {
+            "operationId": "/gopay/wallet/topup:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1gopay~1wallet~1topup:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/gopay/wallet/topup:post",
+                "auth": [
+                    "gopayAuth"
+                ],
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/gopay/wallet/topup",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "amount": 100000.0,
+                                "payment_method": "bank_transfer",
+                                "reference_id": "TXN_GOPAY_001",
+                                "wallet_id": "gopay_wallet_789"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/ovo/auth/login:post": {
+            "operationId": "/ovo/auth/login:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1ovo~1auth~1login:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/ovo/auth/login:post",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/ovo/auth/login",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "api_key": "ovo_api_key_abc123",
+                                "api_secret": "ovo_secret_def456",
+                                "environment": "sandbox",
+                                "partner_id": "OVO_PARTNER_789"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "401": {
+                        "expectations": {
+                            "httpStatus": 401
+                        }
+                    }
+                }
+            }
+        },
+        "/ovo/balance/inquiry:get": {
+            "operationId": "/ovo/balance/inquiry:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1ovo~1balance~1inquiry:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/ovo/balance/inquiry:get",
+                "auth": [
+                    "ovoAuth"
+                ],
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/ovo/balance/inquiry",
+                        "method": "GET",
+                        "queries": [
+                            {
+                                "key": "phone_number",
+                                "value": "628123456789"
+                            },
+                            {
+                                "key": "partner_trx_id",
+                                "value": "TRX_OVO_BAL_001"
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/ovo/topup/request:post": {
+            "operationId": "/ovo/topup/request:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1ovo~1topup~1request:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/ovo/topup/request:post",
+                "auth": [
+                    "ovoAuth"
+                ],
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/ovo/topup/request",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "amount": "75000.00",
+                                "bank_details": {
+                                    "account_name": "John Doe",
+                                    "account_number": "9876543210",
+                                    "bank_code": "014"
+                                },
+                                "notification_url": "https://partner.com/ovo/callback",
+                                "partner_trx_id": "TRX_OVO_TOPUP_001",
+                                "phone_number": "628123456789",
+                                "topup_method": "BANK_TRANSFER"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/shopeepay/account/balance:post": {
+            "operationId": "/shopeepay/account/balance:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1shopeepay~1account~1balance:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/shopeepay/account/balance:post",
+                "auth": [
+                    "shopeeAuth"
+                ],
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/shopeepay/account/balance",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "include_details": true,
+                                "request_id": "req_shopee_001",
+                                "user_id": "shopee_user_123"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "/shopeepay/authentication:post": {
+            "operationId": "/shopeepay/authentication:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1shopeepay~1authentication:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/shopeepay/authentication:post",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/shopeepay/authentication",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/x-www-form-urlencoded"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "urlencoded",
+                            "urlencoded": {
+                                "api_key": {
+                                    "value": "shopee_api_key_xyz"
+                                },
+                                "merchant_id": {
+                                    "value": "SHOPEE_MERCHANT_001"
+                                },
+                                "signature": {
+                                    "value": "sha256_signature_hash"
+                                },
+                                "timestamp": {
+                                    "value": 1720866000
+                                }
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "401": {
+                        "expectations": {
+                            "httpStatus": 401
+                        }
+                    }
+                }
+            }
+        },
+        "/shopeepay/wallet/topup:post": {
+            "operationId": "/shopeepay/wallet/topup:post",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1shopeepay~1wallet~1topup:post/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/shopeepay/wallet/topup:post",
+                "auth": [
+                    "shopeeAuth"
+                ],
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/shopeepay/wallet/topup",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "callback_url": "https://merchant.com/callback",
+                                "request_id": "req_shopee_topup_001",
+                                "source_details": {
+                                    "account_number": "1234567890",
+                                    "bank_code": "BCA"
+                                },
+                                "source_type": "BANK_ACCOUNT",
+                                "topup_amount": 50000,
+                                "user_id": "shopee_user_123"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "environments": {
+        "default": {
+            "variables": {
+                "gopayAuth": {
+                    "from": "environment",
+                    "name": "SCAN42C_SECURITY_GOPAYAUTH",
+                    "required": true
+                },
+                "host": {
+                    "from": "environment",
+                    "name": "SCAN42C_HOST",
+                    "required": false,
+                    "default": "https://api.gopay.com/v1"
+                },
+                "ovoAuth": {
+                    "from": "environment",
+                    "name": "SCAN42C_SECURITY_OVOAUTH",
+                    "required": true
+                },
+                "shopeeAuth": {
+                    "from": "environment",
+                    "name": "SCAN42C_SECURITY_SHOPEEAUTH",
+                    "required": true
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,3 @@
+apis:
+  external-services.yaml:
+    alias: external-e-wallet-services-api
