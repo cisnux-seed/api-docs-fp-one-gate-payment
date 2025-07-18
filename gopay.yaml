@@ -1,0 +1,437 @@
+openapi: 3.0.3
+info:
+  title: External E-Wallet Services API
+  description: API specification for external e-wallet services including Gopay, Shopee Pay, and OVO
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.gopay.com/v1
+    description: Gopay Production Server
+
+paths:
+  # GOPAY ENDPOINTS
+  /gopay/auth/token:
+    post:
+      tags:
+        - "Gopay Authentication"
+      summary: Gopay OAuth2 Token Authentication
+      description: Authenticate with Gopay using OAuth2 client credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_id
+                - client_secret
+                - grant_type
+              properties:
+                client_id:
+                  type: string
+                  example: "gopay_client_123"
+                client_secret:
+                  type: string
+                  example: "secret_key_456"
+                grant_type:
+                  type: string
+                  enum: ["client_credentials"]
+                  example: "client_credentials"
+                scope:
+                  type: string
+                  example: "payment:read payment:write"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  token_type:
+                    type: string
+                    example: "Bearer"
+                  expires_in:
+                    type: integer
+                    example: 3600
+                  scope:
+                    type: string
+                    example: "payment:read payment:write"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GopayError'
+
+  /gopay/wallet/balance:
+    get:
+      tags:
+        - "Gopay Payment"
+      summary: Get Gopay wallet balance
+      description: Retrieve current balance of Gopay wallet
+      security:
+        - gopayAuth: []
+      parameters:
+        - name: wallet_id
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "gopay_wallet_789"
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      wallet_id:
+                        type: string
+                        example: "gopay_wallet_789"
+                      balance:
+                        type: number
+                        format: double
+                        example: 150000.00
+                      currency:
+                        type: string
+                        example: "IDR"
+                      last_updated:
+                        type: string
+                        format: date-time
+                        example: "2025-07-13T10:30:00Z"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GopayError'
+
+  /gopay/wallet/topup:
+    post:
+      tags:
+        - "Gopay Payment"
+      summary: Topup Gopay wallet
+      description: Add funds to Gopay wallet
+      security:
+        - gopayAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - wallet_id
+                - amount
+                - payment_method
+              properties:
+                wallet_id:
+                  type: string
+                  example: "gopay_wallet_789"
+                amount:
+                  type: number
+                  format: double
+                  minimum: 10000
+                  example: 100000.00
+                payment_method:
+                  type: string
+                  enum: ["bank_transfer", "credit_card", "debit_card"]
+                  example: "bank_transfer"
+                reference_id:
+                  type: string
+                  example: "TXN_GOPAY_001"
+      responses:
+        '200':
+          description: Topup successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  transaction_id:
+                    type: string
+                    example: "gopay_txn_456789"
+                  wallet_id:
+                    type: string
+                    example: "gopay_wallet_789"
+                  amount:
+                    type: number
+                    format: double
+                    example: 100000.00
+                  new_balance:
+                    type: number
+                    format: double
+                    example: 250000.00
+                  transaction_time:
+                    type: string
+                    format: date-time
+                    example: "2025-07-13T10:35:00Z"
+
+  # SHOPEE PAY ENDPOINTS
+  /shopeepay/authentication:
+    post:
+      tags:
+        - "Shopee Pay Authentication"
+      summary: Shopee Pay JWT Authentication
+      description: Authenticate with Shopee Pay using JWT
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - merchant_id
+                - api_key
+                - signature
+                - timestamp
+              properties:
+                merchant_id:
+                  type: string
+                  example: "SHOPEE_MERCHANT_001"
+                api_key:
+                  type: string
+                  example: "shopee_api_key_xyz"
+                signature:
+                  type: string
+                  example: "sha256_signature_hash"
+                timestamp:
+                  type: integer
+                  example: 1720866000
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  valid_until:
+                    type: integer
+                    example: 1720869600
+                  merchant_info:
+                    type: object
+                    properties:
+                      merchant_id:
+                        type: string
+                        example: "SHOPEE_MERCHANT_001"
+                      merchant_name:
+                        type: string
+                        example: "Demo Store"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShopeePayError'
+
+  /shopeepay/account/balance:
+    post:
+      tags:
+        - "Shopee Pay Payment"
+      summary: Get Shopee Pay account balance
+      description: Retrieve current balance of Shopee Pay account
+      security:
+        - shopeeAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - request_id
+              properties:
+                user_id:
+                  type: string
+                  example: "shopee_user_123"
+                request_id:
+                  type: string
+                  example: "req_shopee_001"
+                include_details:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: "SUCCESS"
+                  request_id:
+                    type: string
+                    example: "req_shopee_001"
+                  balance_info:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                        example: "shopee_user_123"
+                      available_balance:
+                        type: integer
+                        example: 175000
+                      pending_balance:
+                        type: integer
+                        example: 25000
+                      currency_code:
+                        type: string
+                        example: "IDR"
+                      last_transaction_date:
+                        type: string
+                        example: "2025-07-13"
+
+  /shopeepay/wallet/topup:
+    post:
+      tags:
+        - "Shopee Pay Payment"
+      summary: Topup Shopee Pay wallet
+      description: Add funds to Shopee Pay wallet
+      security:
+        - shopeeAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - topup_amount
+                - source_type
+                - request_id
+              properties:
+                user_id:
+                  type: string
+                  example: "shopee_user_123"
+                topup_amount:
+                  type: integer
+                  minimum: 10000
+                  example: 50000
+                source_type:
+                  type: string
+                  enum: ["BANK_ACCOUNT", "CREDIT_CARD", "VIRTUAL_ACCOUNT"]
+                  example: "BANK_ACCOUNT"
+                source_details:
+                  type: object
+                  properties:
+                    bank_code:
+                      type: string
+                      example: "BNI"
+                    account_number:
+                      type: string
+                      example: "1234567890"
+                request_id:
+                  type: string
+                  example: "req_shopee_topup_001"
+                callback_url:
+                  type: string
+                  example: "https://merchant.com/callback"
+      responses:
+        '200':
+          description: Topup initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: "SUCCESS"
+                  request_id:
+                    type: string
+                    example: "req_shopee_topup_001"
+                  topup_details:
+                    type: object
+                    properties:
+                      transaction_id:
+                        type: string
+                        example: "shopee_topup_987654"
+                      user_id:
+                        type: string
+                        example: "shopee_user_123"
+                      amount:
+                        type: integer
+                        example: 50000
+                      status:
+                        type: string
+                        example: "PENDING"
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2025-07-13T10:40:00+07:00"
+
+components:
+  securitySchemes:
+    gopayAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Gopay OAuth2 Bearer Token"
+    shopeeAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Shopee Pay JWT Token"
+
+  schemas:
+    GopayError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "invalid_client"
+        error_description:
+          type: string
+          example: "Invalid client credentials"
+        status_code:
+          type: integer
+          example: 400
+    ShopeePayError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error_code:
+          type: string
+          example: "AUTH_FAILED"
+        error_message:
+          type: string
+          example: "Invalid signature or expired timestamp"
+        timestamp:
+          type: integer
+          example: 1720866000
+
+tags:
+  - name: "Gopay Authentication"
+    description: "Authentication endpoints for Gopay service"
+  - name: "Gopay Payment"
+    description: "Payment and wallet management for Gopay"

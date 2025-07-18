@@ -1,0 +1,248 @@
+openapi: 3.0.3
+info:
+  title: External E-Wallet Services API
+  description: API specification for Shopee Pay sexternal e-wallet services
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.shopeepay.com/v2
+    description: Shopee Pay Production Server
+
+paths:
+  # SHOPEE PAY ENDPOINTS
+  /shopeepay/authentication:
+    post:
+      tags:
+        - "Shopee Pay Authentication"
+      summary: Shopee Pay JWT Authentication
+      description: Authenticate with Shopee Pay using JWT
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - merchant_id
+                - api_key
+                - signature
+                - timestamp
+              properties:
+                merchant_id:
+                  type: string
+                  example: "SHOPEE_MERCHANT_001"
+                api_key:
+                  type: string
+                  example: "shopee_api_key_xyz"
+                signature:
+                  type: string
+                  example: "sha256_signature_hash"
+                timestamp:
+                  type: integer
+                  example: 1720866000
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  valid_until:
+                    type: integer
+                    example: 1720869600
+                  merchant_info:
+                    type: object
+                    properties:
+                      merchant_id:
+                        type: string
+                        example: "SHOPEE_MERCHANT_001"
+                      merchant_name:
+                        type: string
+                        example: "Demo Store"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShopeePayError'
+
+  /shopeepay/account/balance:
+    post:
+      tags:
+        - "Shopee Pay Payment"
+      summary: Get Shopee Pay account balance
+      description: Retrieve current balance of Shopee Pay account
+      security:
+        - shopeeAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - request_id
+              properties:
+                user_id:
+                  type: string
+                  example: "shopee_user_123"
+                request_id:
+                  type: string
+                  example: "req_shopee_001"
+                include_details:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: "SUCCESS"
+                  request_id:
+                    type: string
+                    example: "req_shopee_001"
+                  balance_info:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                        example: "shopee_user_123"
+                      available_balance:
+                        type: integer
+                        example: 175000
+                      pending_balance:
+                        type: integer
+                        example: 25000
+                      currency_code:
+                        type: string
+                        example: "IDR"
+                      last_transaction_date:
+                        type: string
+                        example: "2025-07-13"
+
+  /shopeepay/wallet/topup:
+    post:
+      tags:
+        - "Shopee Pay Payment"
+      summary: Topup Shopee Pay wallet
+      description: Add funds to Shopee Pay wallet
+      security:
+        - shopeeAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - topup_amount
+                - source_type
+                - request_id
+              properties:
+                user_id:
+                  type: string
+                  example: "shopee_user_123"
+                topup_amount:
+                  type: integer
+                  minimum: 10000
+                  example: 50000
+                source_type:
+                  type: string
+                  enum: ["BANK_ACCOUNT", "CREDIT_CARD", "VIRTUAL_ACCOUNT"]
+                  example: "BANK_ACCOUNT"
+                source_details:
+                  type: object
+                  properties:
+                    bank_code:
+                      type: string
+                      example: "BNI"
+                    account_number:
+                      type: string
+                      example: "1234567890"
+                request_id:
+                  type: string
+                  example: "req_shopee_topup_001"
+                callback_url:
+                  type: string
+                  example: "https://merchant.com/callback"
+      responses:
+        '200':
+          description: Topup initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: "SUCCESS"
+                  request_id:
+                    type: string
+                    example: "req_shopee_topup_001"
+                  topup_details:
+                    type: object
+                    properties:
+                      transaction_id:
+                        type: string
+                        example: "shopee_topup_987654"
+                      user_id:
+                        type: string
+                        example: "shopee_user_123"
+                      amount:
+                        type: integer
+                        example: 50000
+                      status:
+                        type: string
+                        example: "PENDING"
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2025-07-13T10:40:00+07:00"
+
+components:
+  securitySchemes:
+    shopeeAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Shopee Pay JWT Token"
+
+  schemas:
+    ShopeePayError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error_code:
+          type: string
+          example: "AUTH_FAILED"
+        error_message:
+          type: string
+          example: "Invalid signature or expired timestamp"
+        timestamp:
+          type: integer
+          example: 1720866000
+
+tags:
+  - name: "Shopee Pay Authentication"
+    description: "Authentication endpoints for Shopee Pay service"
+  - name: "Shopee Pay Payment"
+    description: "Payment and wallet management for Shopee Pay"

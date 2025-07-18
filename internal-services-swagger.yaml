@@ -1,0 +1,1110 @@
+openapi: 3.0.3
+info:
+  title: BNI Payment Authentication Service API
+  description: |
+    Authentication service API for user registration, login, token refresh, and logout operations.
+    
+    This service provides JWT-based authentication with access and refresh tokens.
+  version: 1.0.0
+  contact:
+    name: BNI Payment Authentication Service
+    email: support@bni.co.id
+  license:
+    name: Proprietary
+    url: https://www.bni.co.id
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api-dev.bni.co.id
+    description: Development server
+  - url: https://api.bni.co.id
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication operations
+  - name: Payment
+    description: E-wallet and payment operations
+  - name: Transactions
+    description: Historical transaction management
+
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Creates a new user account with unique username and email.
+        Password will be securely hashed before storage.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+            examples:
+              user_registration:
+                summary: Example user registration
+                value:
+                  email: "john.doe@example.com"
+                  username: "johndoe"
+                  password: "SecurePassword123!"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: string
+                        description: User email address
+                        example: "john.doe@example.com"
+              examples:
+                success:
+                  summary: Successful registration
+                  value:
+                    meta:
+                      code: "201"
+                      message: "user registered successfully"
+                    data: "john.doe@example.com"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Username or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                conflict:
+                  summary: Username/email conflict
+                  value:
+                    meta:
+                      code: "409"
+                      message: "username or email already exists"
+                    data: null
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user
+      description: |
+        Authenticate user with username/email and password.
+        Returns access token and refresh token upon successful authentication.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAuth'
+            examples:
+              login_request:
+                summary: Example login request
+                value:
+                  username: "johndoe"
+                  password: "SecurePassword123!"
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Successful login
+                  value:
+                    meta:
+                      code: "200"
+                      message: "user logged in successfully"
+                    data:
+                      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_credentials:
+                  summary: Invalid email or password
+                  value:
+                    meta:
+                      code: "401"
+                      message: "invalid email or password"
+                    data: null
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/refresh:
+    put:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: |
+        Generate a new access token using a valid refresh token.
+        The refresh token must be valid and not expired.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+            examples:
+              refresh_request:
+                summary: Example refresh request
+                value:
+                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TokenResponse'
+              examples:
+                success:
+                  summary: Successful token refresh
+                  value:
+                    meta:
+                      code: "200"
+                      message: "refresh token successfully"
+                    data:
+                      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_token:
+                  summary: Invalid refresh token
+                  value:
+                    meta:
+                      code: "401"
+                      message: "token is invalid or expired"
+                    data: null
+                expired_token:
+                  summary: Expired refresh token
+                  value:
+                    meta:
+                      code: "401"
+                      message: "token is expired"
+                    data: null
+                malformed_token:
+                  summary: Malformed token
+                  value:
+                    meta:
+                      code: "401"
+                      message: "invalid token"
+                    data: null
+                invalid_signature:
+                  summary: Invalid token signature
+                  value:
+                    meta:
+                      code: "401"
+                      message: "invalid token signature"
+                    data: null
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/logout:
+    delete:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: |
+        Invalidate the refresh token and log out the user.
+        The refresh token will be removed from the authentication store.
+      operationId: logoutUser
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication
+          schema:
+            type: string
+            example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        - name: refreshToken
+          in: query
+          required: true
+          description: Refresh token to invalidate
+          schema:
+            type: string
+            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: User logged out successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: string
+                        example: "user logged out successfully"
+              examples:
+                success:
+                  summary: Successful logout
+                  value:
+                    meta:
+                      code: "200"
+                      message: "user logged out successfully"
+                    data: "user logged out successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/payment/account:
+    get:
+      tags:
+        - Payment
+      summary: Get user account details
+      description: |
+        Retrieve the authenticated user's account information including balance,
+        currency, and account status.
+      operationId: getAccount
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Account details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AccountResponse'
+              examples:
+                success:
+                  summary: Account details
+                  value:
+                    meta:
+                      code: "200"
+                      message: "account details retrieved successfully"
+                    data:
+                      id: 12345
+                      userId: 67890
+                      balance: 150000.00
+                      currency: "IDR"
+                      accountStatus: "ACTIVE"
+                      createdAt: "2024-01-15T10:30:00Z"
+                      updatedAt: "2024-01-20T14:45:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Account not found
+                  value:
+                    meta:
+                      code: "404"
+                      message: "account not found"
+                    data: null
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/payment/balance:
+    get:
+      tags:
+        - Payment
+      summary: Get e-wallet balance
+      description: |
+        Retrieve the current balance of the authenticated user's e-wallet.
+      operationId: getBalance
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BalanceResponse'
+              examples:
+                success:
+                  summary: Current balance
+                  value:
+                    meta:
+                      code: "200"
+                      message: "balance retrieved successfully"
+                    data:
+                      balance: 150000.00
+                      currency: "IDR"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/payment/topup:
+    post:
+      tags:
+        - Payment
+      summary: Top up e-wallet balance
+      description: |
+        Add funds to the authenticated user's e-wallet using various payment methods.
+        Creates a transaction record and updates the account balance.
+      operationId: topupBalance
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopupRequest'
+            examples:
+              gopay_topup:
+                summary: Top up using GoPay
+                value:
+                  amount: 50000.00
+                  paymentMethod: "GOPAY"
+                  description: "Top up via GoPay"
+              bank_transfer:
+                summary: Top up using Bank Transfer
+                value:
+                  amount: 100000.00
+                  paymentMethod: "BANK_TRANSFER"
+                  description: "Top up via Bank Transfer"
+      responses:
+        '201':
+          description: Top up initiated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TransactionResponse'
+              examples:
+                success:
+                  summary: Successful top up
+                  value:
+                    meta:
+                      code: "201"
+                      message: "top up initiated successfully"
+                    data:
+                      id: 98765
+                      transactionId: "TXN-20240120-001"
+                      transactionType: "TOPUP"
+                      transactionStatus: "PENDING"
+                      amount: 50000.00
+                      balanceBefore: 100000.00
+                      balanceAfter: 150000.00
+                      currency: "IDR"
+                      paymentMethod: "GOPAY"
+                      description: "Top up via GoPay"
+                      createdAt: "2024-01-20T15:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Invalid amount or payment method
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_amount:
+                  summary: Invalid amount
+                  value:
+                    meta:
+                      code: "422"
+                      message: "amount must be greater than 0"
+                    data: null
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get user transaction history
+      description: |
+        Retrieve paginated list of user's historical transactions with optional filtering.
+      operationId: getTransactions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Number of transactions per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: type
+          in: query
+          description: Filter by transaction type
+          required: false
+          schema:
+            type: string
+            enum: [TOPUP, PAYMENT, REFUND, TRANSFER]
+          example: "TOPUP"
+        - name: status
+          in: query
+          description: Filter by transaction status
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, SUCCESS, FAILED, CANCELLED]
+          example: "SUCCESS"
+        - name: fromDate
+          in: query
+          description: Start date for transaction filter (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00Z"
+        - name: toDate
+          in: query
+          description: End date for transaction filter (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-31T23:59:59Z"
+      responses:
+        '200':
+          description: Transactions retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TransactionPageResponse'
+              examples:
+                success:
+                  summary: Transaction history
+                  value:
+                    meta:
+                      code: "200"
+                      message: "transactions retrieved successfully"
+                    data:
+                      content:
+                        - id: 98765
+                          transactionId: "TXN-20240120-001"
+                          transactionType: "TOPUP"
+                          transactionStatus: "SUCCESS"
+                          amount: 50000.00
+                          balanceBefore: 100000.00
+                          balanceAfter: 150000.00
+                          currency: "IDR"
+                          paymentMethod: "GOPAY"
+                          description: "Top up via GoPay"
+                          createdAt: "2024-01-20T15:30:00Z"
+                          updatedAt: "2024-01-20T15:31:00Z"
+                      pagination:
+                        page: 0
+                        size: 20
+                        totalElements: 1
+                        totalPages: 1
+                        first: true
+                        last: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/transactions/{transactionId}:
+    get:
+      tags:
+        - Transactions
+      summary: Get transaction details
+      description: |
+        Retrieve detailed information about a specific transaction by transaction ID.
+      operationId: getTransactionById
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          description: Unique transaction identifier
+          required: true
+          schema:
+            type: string
+          example: "TXN-20240120-001"
+      responses:
+        '200':
+          description: Transaction details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TransactionDetailResponse'
+              examples:
+                success:
+                  summary: Transaction details
+                  value:
+                    meta:
+                      code: "200"
+                      message: "transaction details retrieved successfully"
+                    data:
+                      id: 98765
+                      userId: 67890
+                      accountId: 12345
+                      transactionId: "TXN-20240120-001"
+                      transactionType: "TOPUP"
+                      transactionStatus: "SUCCESS"
+                      amount: 50000.00
+                      balanceBefore: 100000.00
+                      balanceAfter: 150000.00
+                      currency: "IDR"
+                      description: "Top up via GoPay"
+                      externalReference: "GOPAY-REF-123456"
+                      paymentMethod: "GOPAY"
+                      metadata: "{\"provider\": \"gopay\", \"reference\": \"GP123456\"}"
+                      isAccessibleExternal: true
+                      createdAt: "2024-01-20T15:30:00Z"
+                      updatedAt: "2024-01-20T15:31:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Transaction not found
+                  value:
+                    meta:
+                      code: "404"
+                      message: "transaction not found"
+                    data: null
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    UserRegister:
+      type: object
+      required:
+        - email
+        - username
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Valid email address
+          example: "john.doe@example.com"
+        username:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Unique username
+          example: "johndoe"
+        password:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User password (will be hashed)
+          example: "SecurePassword123!"
+
+    UserAuth:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Username or email for authentication
+          example: "johndoe"
+        password:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User password
+          example: "SecurePassword123!"
+
+    TokenRefresh:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          minLength: 1
+          description: Valid JWT refresh token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token for API authentication
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWF0IjoxNjE2MjM5MDIyfQ..."
+        refreshToken:
+          type: string
+          description: JWT refresh token for obtaining new access tokens
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWF0IjoxNjE2MjM5MDIyfQ..."
+
+    TokenResponse:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWF0IjoxNjE2MjM5MDIyfQ..."
+
+    MetaResponse:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: HTTP status code as string
+          example: "200"
+        message:
+          type: string
+          nullable: true
+          description: Response message
+          example: "Operation completed successfully"
+
+    WebResponse:
+      type: object
+      required:
+        - meta
+      properties:
+        meta:
+          $ref: '#/components/schemas/MetaResponse'
+        data:
+          description: Response data (type varies by endpoint)
+          nullable: true
+
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/WebResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              nullable: true
+              example: null
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name that failed validation
+          example: "email"
+        message:
+          type: string
+          description: Validation error message
+          example: "email is not valid"
+
+    AccountResponse:
+      type: object
+      required:
+        - id
+        - userId
+        - balance
+        - currency
+        - accountStatus
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Account ID
+          example: 12345
+        userId:
+          type: integer
+          format: int64
+          description: User ID who owns this account
+          example: 67890
+        balance:
+          type: number
+          format: decimal
+          description: Current account balance
+          example: 150000.00
+        currency:
+          type: string
+          description: Account currency
+          enum: [IDR, USD, EUR]
+          default: "IDR"
+          example: "IDR"
+        accountStatus:
+          type: string
+          description: Account status
+          enum: [ACTIVE, SUSPENDED, CLOSED]
+          example: "ACTIVE"
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Account last update timestamp
+          example: "2024-01-20T14:45:00Z"
+
+    BalanceResponse:
+      type: object
+      required:
+        - balance
+        - currency
+      properties:
+        balance:
+          type: number
+          format: decimal
+          description: Current balance
+          example: 150000.00
+        currency:
+          type: string
+          description: Balance currency
+          example: "IDR"
+
+    TopupRequest:
+      type: object
+      required:
+        - amount
+        - paymentMethod
+      properties:
+        amount:
+          type: number
+          format: decimal
+          minimum: 1
+          description: Amount to top up
+          example: 50000.00
+        paymentMethod:
+          type: string
+          description: Payment method for top up
+          enum: [GOPAY, SHOPEE_PAY, BANK_TRANSFER]
+          example: "GOPAY"
+        description:
+          type: string
+          maxLength: 255
+          description: Optional transaction description
+          example: "Top up via GoPay"
+
+    TransactionResponse:
+      type: object
+      required:
+        - id
+        - transactionId
+        - transactionType
+        - transactionStatus
+        - amount
+        - balanceBefore
+        - balanceAfter
+        - currency
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Internal transaction ID
+          example: 98765
+        transactionId:
+          type: string
+          description: Unique transaction reference
+          example: "TXN-20240120-001"
+        transactionType:
+          type: string
+          description: Type of transaction
+          enum: [TOPUP, PAYMENT, REFUND, TRANSFER]
+          example: "TOPUP"
+        transactionStatus:
+          type: string
+          description: Current status of transaction
+          enum: [PENDING, SUCCESS, FAILED, CANCELLED]
+          example: "PENDING"
+        amount:
+          type: number
+          format: decimal
+          description: Transaction amount
+          example: 50000.00
+        balanceBefore:
+          type: number
+          format: decimal
+          description: Account balance before transaction
+          example: 100000.00
+        balanceAfter:
+          type: number
+          format: decimal
+          description: Account balance after transaction
+          example: 150000.00
+        currency:
+          type: string
+          description: Transaction currency
+          example: "IDR"
+        paymentMethod:
+          type: string
+          description: Payment method used
+          enum: [GOPAY, SHOPEE_PAY, BANK_TRANSFER]
+          example: "GOPAY"
+        description:
+          type: string
+          description: Transaction description
+          example: "Top up via GoPay"
+        createdAt:
+          type: string
+          format: date-time
+          description: Transaction creation timestamp
+          example: "2024-01-20T15:30:00Z"
+
+    TransactionDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/TransactionResponse'
+        - type: object
+          properties:
+            userId:
+              type: integer
+              format: int64
+              description: User ID who performed the transaction
+              example: 67890
+            accountId:
+              type: integer
+              format: int64
+              description: Account ID involved in the transaction
+              example: 12345
+            externalReference:
+              type: string
+              nullable: true
+              description: External system reference
+              example: "GOPAY-REF-123456"
+            metadata:
+              type: string
+              nullable: true
+              description: Additional transaction data as JSON string
+              example: "{\"provider\": \"gopay\", \"reference\": \"GP123456\"}"
+            isAccessibleExternal:
+              type: boolean
+              description: Whether transaction is accessible to external services
+              default: true
+              example: true
+            updatedAt:
+              type: string
+              format: date-time
+              description: Transaction last update timestamp
+              example: "2024-01-20T15:31:00Z"
+
+    TransactionPageResponse:
+      type: object
+      required:
+        - content
+        - pagination
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+          description: List of transactions
+        pagination:
+          $ref: '#/components/schemas/PaginationResponse'
+
+    PaginationResponse:
+      type: object
+      required:
+        - page
+        - size
+        - totalElements
+        - totalPages
+        - first
+        - last
+      properties:
+        page:
+          type: integer
+          description: Current page number (0-based)
+          example: 0
+        size:
+          type: integer
+          description: Number of items per page
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements
+          example: 1
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 1
+        first:
+          type: boolean
+          description: Whether this is the first page
+          example: true
+        last:
+          type: boolean
+          description: Whether this is the last page
+          example: true
+
+  responses:
+    BadRequest:
+      description: Bad request - validation errors
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WebResponse'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ValidationError'
+          examples:
+            validation_error:
+              summary: Validation errors
+              value:
+                meta:
+                  code: "400"
+                  message: "Validation failed"
+                data:
+                  - field: "email"
+                    message: "email is not valid"
+                  - field: "password"
+                    message: "password cannot be blank"
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_token:
+              summary: Missing authentication token
+              value:
+                meta:
+                  code: "401"
+                  message: "authentication required"
+                data: null
+            invalid_token:
+              summary: Invalid authentication token
+              value:
+                meta:
+                  code: "401"
+                  message: "invalid or expired token"
+                data: null
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            server_error:
+              summary: Internal server error
+              value:
+                meta:
+                  code: "500"
+                  message: "Internal server error"
+                data: null
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token authentication.
+        
+        Include the access token in the Authorization header:
+        `Authorization: Bearer <access_token>`
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key authentication for external services.
+        
+        Include your API key in the X-API-Key header:
+        `X-API-Key: <your_api_key>`
+
+security:
+  - BearerAuth: []
