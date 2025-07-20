@@ -974,7 +974,7 @@ components:
         payment_method:
           type: string
           description: Payment method used
-          enum: [GOPAY, SHOPEE_PAY, BANK_TRANSFER]
+          enum: [GOPAY, SHOPEE_PAY]
           example: "GOPAY"
         description:
           type: string
