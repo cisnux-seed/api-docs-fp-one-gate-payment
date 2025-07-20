@@ -402,6 +402,110 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/payment/external-balance:
+    get:
+      tags:
+        - Payment
+      summary: Get external e-wallet balance
+      description: |
+        Retrieve the current balance from external e-wallet providers like GoPay or ShopeePay.
+        This endpoint connects to the external provider's API to get real-time balance information.
+      operationId: getExternalBalance
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: ewallet
+          in: query
+          required: true
+          description: External e-wallet provider
+          schema:
+            type: string
+            enum: [gopay, shopeepay]
+          example: "gopay"
+      responses:
+        '200':
+          description: External balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ExternalBalanceResponse'
+              examples:
+                gopay_success:
+                  summary: GoPay balance
+                  value:
+                    meta:
+                      code: "200"
+                      message: "external balance retrieved successfully"
+                    data:
+                      provider: "gopay"
+                      balance: 75000.00
+                      currency: "IDR"
+                      account_number: "081234567890"
+                      last_updated: "2024-01-20T16:30:00Z"
+                shopeepay_success:
+                  summary: ShopeePay balance
+                  value:
+                    meta:
+                      code: "200"
+                      message: "external balance retrieved successfully"
+                    data:
+                      provider: "shopeepay"
+                      balance: 125000.00
+                      currency: "IDR"
+                      account_number: "081234567890"
+                      last_updated: "2024-01-20T16:30:00Z"
+        '400':
+          description: Invalid e-wallet provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_provider:
+                  summary: Invalid e-wallet provider
+                  value:
+                    meta:
+                      code: "400"
+                      message: "invalid e-wallet provider. supported providers: gopay, shopeepay"
+                    data: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: E-wallet account not linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_linked:
+                  summary: E-wallet not linked
+                  value:
+                    meta:
+                      code: "403"
+                      message: "gopay account not linked to your profile"
+                    data: null
+        '502':
+          description: External service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                service_unavailable:
+                  summary: External service error
+                  value:
+                    meta:
+                      code: "502"
+                      message: "gopay service temporarily unavailable"
+                    data: null
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/payment/topup:
     post:
       tags:
@@ -977,6 +1081,39 @@ components:
           type: string
           description: Balance currency
           example: "IDR"
+
+    ExternalBalanceResponse:
+      type: object
+      required:
+        - provider
+        - balance
+        - currency
+        - account_number
+        - last_updated
+      properties:
+        provider:
+          type: string
+          description: External e-wallet provider name
+          enum: [gopay, shopeepay]
+          example: "gopay"
+        balance:
+          type: number
+          format: decimal
+          description: Current balance from external provider
+          example: 75000.00
+        currency:
+          type: string
+          description: Balance currency
+          example: "IDR"
+        account_number:
+          type: string
+          description: Linked account number/phone number
+          example: "081234567890"
+        last_updated:
+          type: string
+          format: date-time
+          description: Last time balance was updated from external provider
+          example: "2024-01-20T16:30:00Z"
 
     TopupRequest:
       type: object
