@@ -3,7 +3,6 @@ info:
   title: BNI Payment Authentication Service API
   description: |
     Authentication service API for user registration, login, token refresh, and logout operations.
-    
     This service provides JWT-based authentication with access and refresh tokens.
   version: 1.0.0
   contact:
@@ -36,7 +35,7 @@ paths:
         - Authentication
       summary: Register a new user
       description: |
-        Creates a new user account with unique username and email.
+        Creates a new user account with unique username, email, and optional phone number.
         Password will be securely hashed before storage.
       operationId: registerUser
       requestBody:
@@ -47,10 +46,17 @@ paths:
               $ref: '#/components/schemas/UserRegister'
             examples:
               user_registration:
-                summary: Example user registration
+                summary: Example user registration with phone
                 value:
                   email: "john.doe@example.com"
                   username: "johndoe"
+                  phone: "+6281234567890"
+                  password: "SecurePassword123!"
+              user_registration_no_phone:
+                summary: Example user registration without phone
+                value:
+                  email: "jane.smith@example.com"
+                  username: "janesmith"
                   password: "SecurePassword123!"
       responses:
         '201':
@@ -77,18 +83,18 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
-          description: Username or email already exists
+          description: Username, email, or phone number already exists
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 conflict:
-                  summary: Username/email conflict
+                  summary: Username/email/phone conflict
                   value:
                     meta:
                       code: "409"
-                      message: "username or email already exists"
+                      message: "username, email, or phone number already exists"
                     data: null
         '500':
           $ref: '#/components/responses/InternalServerError'
@@ -99,7 +105,7 @@ paths:
         - Authentication
       summary: Authenticate user
       description: |
-        Authenticate user with username/email and password.
+        Authenticate user with username/email/phone and password.
         Returns access token and refresh token upon successful authentication.
       operationId: loginUser
       requestBody:
@@ -109,10 +115,20 @@ paths:
             schema:
               $ref: '#/components/schemas/UserAuth'
             examples:
-              login_request:
-                summary: Example login request
+              login_username:
+                summary: Login with username
                 value:
                   username: "johndoe"
+                  password: "SecurePassword123!"
+              login_email:
+                summary: Login with email
+                value:
+                  username: "john.doe@example.com"
+                  password: "SecurePassword123!"
+              login_phone:
+                summary: Login with phone number
+                value:
+                  username: "+6281234567890"
                   password: "SecurePassword123!"
       responses:
         '200':
@@ -146,11 +162,11 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalid_credentials:
-                  summary: Invalid email or password
+                  summary: Invalid credentials
                   value:
                     meta:
                       code: "401"
-                      message: "invalid email or password"
+                      message: "invalid username, email, phone, or password"
                     data: null
         '500':
           $ref: '#/components/responses/InternalServerError'
@@ -317,7 +333,7 @@ paths:
                       code: "200"
                       message: "account details retrieved successfully"
                     data:
-                      id: 12345
+                      id: "550e8400-e29b-41d4-a716-446655440001"
                       userId: 67890
                       balance: 150000.00
                       currency: "IDR"
@@ -436,7 +452,7 @@ paths:
                       code: "201"
                       message: "top up initiated successfully"
                     data:
-                      id: 98765
+                      id: "650e8400-e29b-41d4-a716-446655440001"
                       transactionId: "TXN-20240120-001"
                       transactionType: "TOPUP"
                       transactionStatus: "PENDING"
@@ -551,7 +567,7 @@ paths:
                       message: "transactions retrieved successfully"
                     data:
                       content:
-                        - id: 98765
+                        - id: "650e8400-e29b-41d4-a716-446655440001"
                           transactionId: "TXN-20240120-001"
                           transactionType: "TOPUP"
                           transactionStatus: "SUCCESS"
@@ -581,12 +597,13 @@ paths:
     get:
       tags:
         - Transactions
-      summary: Get user transaction history
+      summary: Get user transaction history (External API)
       description: |
         Retrieve paginated list of user's historical transactions with optional filtering.
-      operationId: getTransactions
+        This endpoint is for external services with API key authentication.
+      operationId: getExternalTransactions
       security:
-        - apiKeyAuth: []
+        - ApiKeyAuth: []
       parameters:
         - name: page
           in: query
@@ -660,7 +677,7 @@ paths:
                       message: "transactions retrieved successfully"
                     data:
                       content:
-                        - id: 98765
+                        - id: "650e8400-e29b-41d4-a716-446655440001"
                           transactionId: "TXN-20240120-001"
                           transactionType: "TOPUP"
                           transactionStatus: "SUCCESS"
@@ -695,7 +712,7 @@ paths:
         Retrieve detailed information about a specific transaction by transaction ID.
       operationId: getTransactionById
       security:
-        - apiKeyAuth: []
+        - ApiKeyAuth: []
       parameters:
         - name: transactionId
           in: path
@@ -724,9 +741,9 @@ paths:
                       code: "200"
                       message: "transaction details retrieved successfully"
                     data:
-                      id: 98765
+                      id: "650e8400-e29b-41d4-a716-446655440001"
                       userId: 67890
-                      accountId: 12345
+                      accountId: "550e8400-e29b-41d4-a716-446655440001"
                       transactionId: "TXN-20240120-001"
                       transactionType: "TOPUP"
                       transactionStatus: "SUCCESS"
@@ -781,6 +798,12 @@ components:
           maxLength: 255
           description: Unique username
           example: "johndoe"
+        phone:
+          type: string
+          maxLength: 20
+          description: Phone number in international format (optional)
+          example: "+6281234567890"
+          pattern: '^\+[1-9]\d{1,14}$'
         password:
           type: string
           minLength: 1
@@ -797,8 +820,8 @@ components:
         username:
           type: string
           minLength: 1
-          maxLength: 50
-          description: Username or email for authentication
+          maxLength: 255
+          description: Username, email, or phone number for authentication
           example: "johndoe"
         password:
           type: string
@@ -903,10 +926,10 @@ components:
         - updatedAt
       properties:
         id:
-          type: integer
-          format: int64
-          description: Account ID
-          example: 12345
+          type: string
+          format: uuid
+          description: Account UUID
+          example: "550e8400-e29b-41d4-a716-446655440001"
         userId:
           type: integer
           format: int64
@@ -992,10 +1015,10 @@ components:
         - createdAt
       properties:
         id:
-          type: integer
-          format: int64
-          description: Internal transaction ID
-          example: 98765
+          type: string
+          format: uuid
+          description: Transaction UUID
+          example: "650e8400-e29b-41d4-a716-446655440001"
         transactionId:
           type: string
           description: Unique transaction reference
@@ -1055,10 +1078,10 @@ components:
               description: User ID who performed the transaction
               example: 67890
             accountId:
-              type: integer
-              format: int64
-              description: Account ID involved in the transaction
-              example: 12345
+              type: string
+              format: uuid
+              description: Account UUID involved in the transaction
+              example: "550e8400-e29b-41d4-a716-446655440001"
             externalReference:
               type: string
               nullable: true
@@ -1156,6 +1179,8 @@ components:
                     message: "email is not valid"
                   - field: "password"
                     message: "password cannot be blank"
+                  - field: "phone"
+                    message: "phone number format is invalid"
 
     Unauthorized:
       description: Unauthorized - invalid or missing authentication
@@ -1177,6 +1202,20 @@ components:
                 meta:
                   code: "401"
                   message: "invalid or expired token"
+                data: null
+            invalid_api_key:
+              summary: Invalid API key
+              value:
+                meta:
+                  code: "401"
+                  message: "invalid API key"
+                data: null
+            rate_limit_exceeded:
+              summary: Rate limit exceeded
+              value:
+                meta:
+                  code: "429"
+                  message: "rate limit exceeded"
                 data: null
 
     InternalServerError:
@@ -1214,6 +1253,10 @@ components:
         
         Include your API key in the X-API-Key header:
         `X-API-Key: <your_api_key>`
+        
+        Rate limits apply based on your API key configuration:
+        - Check response headers for rate limit information
+        - Different keys may have different rate limits per second/minute/hour/day
 
 security:
   - BearerAuth: []
