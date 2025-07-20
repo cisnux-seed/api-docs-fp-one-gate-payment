@@ -150,7 +150,7 @@ paths:
                       code: "200"
                       message: "user logged in successfully"
                     data:
-                      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                       refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -190,7 +190,7 @@ paths:
               refresh_request:
                 summary: Example refresh request
                 value:
-                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
           description: Token refreshed successfully
@@ -269,7 +269,7 @@ paths:
           schema:
             type: string
             example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        - name: refreshToken
+        - name: refresh_token
           in: query
           required: true
           description: Refresh token to invalidate
@@ -334,12 +334,12 @@ paths:
                       message: "account details retrieved successfully"
                     data:
                       id: "550e8400-e29b-41d4-a716-446655440001"
-                      userId: 67890
+                      user_id: 67890
                       balance: 150000.00
                       currency: "IDR"
-                      accountStatus: "ACTIVE"
-                      createdAt: "2024-01-15T10:30:00Z"
-                      updatedAt: "2024-01-20T14:45:00Z"
+                      account_status: "ACTIVE"
+                      created_at: "2024-01-15T10:30:00Z"
+                      updated_at: "2024-01-20T14:45:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -424,13 +424,13 @@ paths:
                 summary: Top up using GoPay
                 value:
                   amount: 50000.00
-                  paymentMethod: "GOPAY"
+                  payment_method: "GOPAY"
                   description: "Top up via GoPay"
               bank_transfer:
                 summary: Top up using Bank Transfer
                 value:
                   amount: 100000.00
-                  paymentMethod: "BANK_TRANSFER"
+                  payment_method: "BANK_TRANSFER"
                   description: "Top up via Bank Transfer"
       responses:
         '201':
@@ -453,16 +453,16 @@ paths:
                       message: "top up initiated successfully"
                     data:
                       id: "650e8400-e29b-41d4-a716-446655440001"
-                      transactionId: "TXN-20240120-001"
-                      transactionType: "TOPUP"
-                      transactionStatus: "PENDING"
+                      transaction_id: "TXN-20240120-001"
+                      transaction_type: "TOPUP"
+                      transaction_status: "PENDING"
                       amount: 50000.00
-                      balanceBefore: 100000.00
-                      balanceAfter: 150000.00
+                      balance_before: 100000.00
+                      balance_after: 150000.00
                       currency: "IDR"
-                      paymentMethod: "GOPAY"
+                      payment_method: "GOPAY"
                       description: "Top up via GoPay"
-                      createdAt: "2024-01-20T15:30:00Z"
+                      created_at: "2024-01-20T15:30:00Z"
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -530,7 +530,7 @@ paths:
             type: string
             enum: [PENDING, SUCCESS, FAILED, CANCELLED]
           example: "SUCCESS"
-        - name: fromDate
+        - name: from_date
           in: query
           description: Start date for transaction filter (ISO 8601)
           required: false
@@ -538,7 +538,7 @@ paths:
             type: string
             format: date-time
           example: "2024-01-01T00:00:00Z"
-        - name: toDate
+        - name: to_date
           in: query
           description: End date for transaction filter (ISO 8601)
           required: false
@@ -568,22 +568,22 @@ paths:
                     data:
                       content:
                         - id: "650e8400-e29b-41d4-a716-446655440001"
-                          transactionId: "TXN-20240120-001"
-                          transactionType: "TOPUP"
-                          transactionStatus: "SUCCESS"
+                          transaction_id: "TXN-20240120-001"
+                          transaction_type: "TOPUP"
+                          transaction_status: "SUCCESS"
                           amount: 50000.00
-                          balanceBefore: 100000.00
-                          balanceAfter: 150000.00
+                          balance_before: 100000.00
+                          balance_after: 150000.00
                           currency: "IDR"
-                          paymentMethod: "GOPAY"
+                          payment_method: "GOPAY"
                           description: "Top up via GoPay"
-                          createdAt: "2024-01-20T15:30:00Z"
-                          updatedAt: "2024-01-20T15:31:00Z"
+                          created_at: "2024-01-20T15:30:00Z"
+                          updated_at: "2024-01-20T15:31:00Z"
                       pagination:
                         page: 0
                         size: 20
-                        totalElements: 1
-                        totalPages: 1
+                        total_elements: 1
+                        total_pages: 1
                         first: true
                         last: true
         '400':
@@ -640,7 +640,7 @@ paths:
             type: string
             enum: [PENDING, SUCCESS, FAILED, CANCELLED]
           example: "SUCCESS"
-        - name: fromDate
+        - name: from_date
           in: query
           description: Start date for transaction filter (ISO 8601)
           required: false
@@ -648,7 +648,7 @@ paths:
             type: string
             format: date-time
           example: "2024-01-01T00:00:00Z"
-        - name: toDate
+        - name: to_date
           in: query
           description: End date for transaction filter (ISO 8601)
           required: false
@@ -678,22 +678,22 @@ paths:
                     data:
                       content:
                         - id: "650e8400-e29b-41d4-a716-446655440001"
-                          transactionId: "TXN-20240120-001"
-                          transactionType: "TOPUP"
-                          transactionStatus: "SUCCESS"
+                          transaction_id: "TXN-20240120-001"
+                          transaction_type: "TOPUP"
+                          transaction_status: "SUCCESS"
                           amount: 50000.00
-                          balanceBefore: 100000.00
-                          balanceAfter: 150000.00
+                          balance_before: 100000.00
+                          balance_after: 150000.00
                           currency: "IDR"
-                          paymentMethod: "GOPAY"
+                          payment_method: "GOPAY"
                           description: "Top up via GoPay"
-                          createdAt: "2024-01-20T15:30:00Z"
-                          updatedAt: "2024-01-20T15:31:00Z"
+                          created_at: "2024-01-20T15:30:00Z"
+                          updated_at: "2024-01-20T15:31:00Z"
                       pagination:
                         page: 0
                         size: 20
-                        totalElements: 1
-                        totalPages: 1
+                        total_elements: 1
+                        total_pages: 1
                         first: true
                         last: true
         '400':
@@ -703,7 +703,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/transactions/{transactionId}:
+  /api/transactions/{transaction_id}:
     get:
       tags:
         - Transactions
@@ -714,7 +714,7 @@ paths:
       security:
         - ApiKeyAuth: []
       parameters:
-        - name: transactionId
+        - name: transaction_id
           in: path
           description: Unique transaction identifier
           required: true
@@ -742,22 +742,22 @@ paths:
                       message: "transaction details retrieved successfully"
                     data:
                       id: "650e8400-e29b-41d4-a716-446655440001"
-                      userId: 67890
-                      accountId: "550e8400-e29b-41d4-a716-446655440001"
-                      transactionId: "TXN-20240120-001"
-                      transactionType: "TOPUP"
-                      transactionStatus: "SUCCESS"
+                      user_id: 67890
+                      account_id: "550e8400-e29b-41d4-a716-446655440001"
+                      transaction_id: "TXN-20240120-001"
+                      transaction_type: "TOPUP"
+                      transaction_status: "SUCCESS"
                       amount: 50000.00
-                      balanceBefore: 100000.00
-                      balanceAfter: 150000.00
+                      balance_before: 100000.00
+                      balance_after: 150000.00
                       currency: "IDR"
                       description: "Top up via GoPay"
-                      externalReference: "GOPAY-REF-123456"
-                      paymentMethod: "GOPAY"
+                      external_reference: "GOPAY-REF-123456"
+                      payment_method: "GOPAY"
                       metadata: "{\"provider\": \"gopay\", \"reference\": \"GP123456\"}"
-                      isAccessibleExternal: true
-                      createdAt: "2024-01-20T15:30:00Z"
-                      updatedAt: "2024-01-20T15:31:00Z"
+                      is_accessible_external: true
+                      created_at: "2024-01-20T15:30:00Z"
+                      updated_at: "2024-01-20T15:31:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -833,9 +833,9 @@ components:
     TokenRefresh:
       type: object
       required:
-        - refreshToken
+        - refresh_token
       properties:
-        refreshToken:
+        refresh_token:
           type: string
           minLength: 1
           description: Valid JWT refresh token
@@ -844,14 +844,14 @@ components:
     AuthResponse:
       type: object
       required:
-        - accessToken
-        - refreshToken
+        - access_token
+        - refresh_token
       properties:
-        accessToken:
+        access_token:
           type: string
           description: JWT access token for API authentication
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWF0IjoxNjE2MjM5MDIyfQ..."
-        refreshToken:
+        refresh_token:
           type: string
           description: JWT refresh token for obtaining new access tokens
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWF0IjoxNjE2MjM5MDIyfQ..."
@@ -859,9 +859,9 @@ components:
     TokenResponse:
       type: object
       required:
-        - accessToken
+        - access_token
       properties:
-        accessToken:
+        access_token:
           type: string
           description: New JWT access token
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWF0IjoxNjE2MjM5MDIyfQ..."
@@ -918,19 +918,19 @@ components:
       type: object
       required:
         - id
-        - userId
+        - user_id
         - balance
         - currency
-        - accountStatus
-        - createdAt
-        - updatedAt
+        - account_status
+        - created_at
+        - updated_at
       properties:
         id:
           type: string
           format: uuid
           description: Account UUID
           example: "550e8400-e29b-41d4-a716-446655440001"
-        userId:
+        user_id:
           type: integer
           format: int64
           description: User ID who owns this account
@@ -946,17 +946,17 @@ components:
           enum: [IDR, USD, EUR]
           default: "IDR"
           example: "IDR"
-        accountStatus:
+        account_status:
           type: string
           description: Account status
           enum: [ACTIVE, SUSPENDED, CLOSED]
           example: "ACTIVE"
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: Account creation timestamp
           example: "2024-01-15T10:30:00Z"
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
           description: Account last update timestamp
@@ -982,7 +982,7 @@ components:
       type: object
       required:
         - amount
-        - paymentMethod
+        - payment_method
       properties:
         amount:
           type: number
@@ -990,7 +990,7 @@ components:
           minimum: 1
           description: Amount to top up
           example: 50000.00
-        paymentMethod:
+        payment_method:
           type: string
           description: Payment method for top up
           enum: [GOPAY, SHOPEE_PAY, BANK_TRANSFER]
@@ -1005,30 +1005,30 @@ components:
       type: object
       required:
         - id
-        - transactionId
-        - transactionType
-        - transactionStatus
+        - transaction_id
+        - transaction_type
+        - transaction_status
         - amount
-        - balanceBefore
-        - balanceAfter
+        - balance_before
+        - balance_after
         - currency
-        - createdAt
+        - created_at
       properties:
         id:
           type: string
           format: uuid
           description: Transaction UUID
           example: "650e8400-e29b-41d4-a716-446655440001"
-        transactionId:
+        transaction_id:
           type: string
           description: Unique transaction reference
           example: "TXN-20240120-001"
-        transactionType:
+        transaction_type:
           type: string
           description: Type of transaction
           enum: [TOPUP, PAYMENT, REFUND, TRANSFER]
           example: "TOPUP"
-        transactionStatus:
+        transaction_status:
           type: string
           description: Current status of transaction
           enum: [PENDING, SUCCESS, FAILED, CANCELLED]
@@ -1038,12 +1038,12 @@ components:
           format: decimal
           description: Transaction amount
           example: 50000.00
-        balanceBefore:
+        balance_before:
           type: number
           format: decimal
           description: Account balance before transaction
           example: 100000.00
-        balanceAfter:
+        balance_after:
           type: number
           format: decimal
           description: Account balance after transaction
@@ -1052,7 +1052,7 @@ components:
           type: string
           description: Transaction currency
           example: "IDR"
-        paymentMethod:
+        payment_method:
           type: string
           description: Payment method used
           enum: [GOPAY, SHOPEE_PAY, BANK_TRANSFER]
@@ -1061,7 +1061,7 @@ components:
           type: string
           description: Transaction description
           example: "Top up via GoPay"
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: Transaction creation timestamp
@@ -1072,17 +1072,17 @@ components:
         - $ref: '#/components/schemas/TransactionResponse'
         - type: object
           properties:
-            userId:
+            user_id:
               type: integer
               format: int64
               description: User ID who performed the transaction
               example: 67890
-            accountId:
+            account_id:
               type: string
               format: uuid
               description: Account UUID involved in the transaction
               example: "550e8400-e29b-41d4-a716-446655440001"
-            externalReference:
+            external_reference:
               type: string
               nullable: true
               description: External system reference
@@ -1092,16 +1092,17 @@ components:
               nullable: true
               description: Additional transaction data as JSON string
               example: "{\"provider\": \"gopay\", \"reference\": \"GP123456\"}"
-            isAccessibleExternal:
+            is_accessible_external:
               type: boolean
               description: Whether transaction is accessible to external services
               default: true
               example: true
-            updatedAt:
+            updated_at:
               type: string
               format: date-time
               description: Transaction last update timestamp
               example: "2024-01-20T15:31:00Z"
+          example: "Top up via GoPay"
 
     TransactionPageResponse:
       type: object
@@ -1122,8 +1123,8 @@ components:
       required:
         - page
         - size
-        - totalElements
-        - totalPages
+        - total_elements
+        - total_pages
         - first
         - last
       properties:
@@ -1135,12 +1136,12 @@ components:
           type: integer
           description: Number of items per page
           example: 20
-        totalElements:
+        total_elements:
           type: integer
           format: int64
           description: Total number of elements
           example: 1
-        totalPages:
+        total_pages:
           type: integer
           description: Total number of pages
           example: 1
