@@ -576,6 +576,115 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
+  /api/external/transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get user transaction history
+      description: |
+        Retrieve paginated list of user's historical transactions with optional filtering.
+      operationId: getTransactions
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Number of transactions per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: type
+          in: query
+          description: Filter by transaction type
+          required: false
+          schema:
+            type: string
+            enum: [TOPUP, PAYMENT, REFUND, TRANSFER]
+          example: "TOPUP"
+        - name: status
+          in: query
+          description: Filter by transaction status
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, SUCCESS, FAILED, CANCELLED]
+          example: "SUCCESS"
+        - name: fromDate
+          in: query
+          description: Start date for transaction filter (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00Z"
+        - name: toDate
+          in: query
+          description: End date for transaction filter (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-31T23:59:59Z"
+      responses:
+        '200':
+          description: Transactions retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/WebResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TransactionPageResponse'
+              examples:
+                success:
+                  summary: Transaction history
+                  value:
+                    meta:
+                      code: "200"
+                      message: "transactions retrieved successfully"
+                    data:
+                      content:
+                        - id: 98765
+                          transactionId: "TXN-20240120-001"
+                          transactionType: "TOPUP"
+                          transactionStatus: "SUCCESS"
+                          amount: 50000.00
+                          balanceBefore: 100000.00
+                          balanceAfter: 150000.00
+                          currency: "IDR"
+                          paymentMethod: "GOPAY"
+                          description: "Top up via GoPay"
+                          createdAt: "2024-01-20T15:30:00Z"
+                          updatedAt: "2024-01-20T15:31:00Z"
+                      pagination:
+                        page: 0
+                        size: 20
+                        totalElements: 1
+                        totalPages: 1
+                        first: true
+                        last: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/transactions/{transactionId}:
     get:
