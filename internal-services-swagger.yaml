@@ -890,6 +890,7 @@ components:
       required:
         - amount
         - payment_method
+        - phone_number
       properties:
         amount:
           type: number
@@ -909,10 +910,7 @@ components:
           maxLength: 20
           nullable: false
           description: |
-            Phone number for e-wallet payment (optional).
-            If not provided, will use the phone number registered in user profile.
-            Required for e-wallet payments if user doesn't have phone in profile.
-            Use Indonesian format (081234567890).
+            Phone number for e-wallet payment. Use Indonesian format (081234567890).
           example: "085987654321"
           pattern: '^08[0-9]{8,11}$'
         description:
