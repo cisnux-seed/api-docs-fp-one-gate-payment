@@ -15,9 +15,9 @@ info:
 servers:
   - url: http://localhost:8080
     description: Local development server
-  - url: https://api-dev.bni.co.id
+  - url: https://kong-proxy-one-gate-payment.apps.ocp-one-gate-payment.skynux.fun
     description: Development server
-  - url: https://api.bni.co.id
+  - url: https://kong-proxy-one-gate-payment.apps.ocp-one-gate-payment.skynux.fun
     description: Production server
 
 tags:
@@ -110,17 +110,12 @@ paths:
               login_username:
                 summary: Login with username
                 value:
-                  username: "johndoe"
-                  password: "SecurePassword123!"
+                  username: "john_doe"
+                  password: "@Skywalker21"
               login_email:
                 summary: Login with email
                 value:
                   username: "john.doe@example.com"
-                  password: "SecurePassword123!"
-              login_phone:
-                summary: Login with phone number
-                value:
-                  username: "081234567890"
                   password: "SecurePassword123!"
       responses:
         '200':
@@ -446,93 +441,12 @@ paths:
                     data: null
         '500':
           $ref: '#/components/responses/InternalServerError'
-
+  
   /api/transactions:
     get:
       tags:
         - Transactions
       summary: Get user transaction history
-      description: |
-        Retrieve paginated list of user's historical transactions with optional filtering.
-      operationId: getTransactions
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          description: Page number (0-based)
-          required: false
-          schema:
-            type: integer
-            minimum: 0
-            default: 0
-          example: 0
-        - name: size
-          in: query
-          description: Number of transactions per page
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-          example: 20
-        - name: type
-          in: query
-          description: Filter by transaction type
-          required: false
-          schema:
-            type: string
-            enum: [TOPUP, PAYMENT, REFUND, TRANSFER]
-          example: "TOPUP"
-        - name: status
-          in: query
-          description: Filter by transaction status
-          required: false
-          schema:
-            type: string
-            enum: [PENDING, SUCCESS, FAILED, CANCELLED]
-          example: "SUCCESS"
-        - name: from_date
-          in: query
-          description: Start date for transaction filter (ISO 8601)
-          required: false
-          schema:
-            type: string
-            format: date-time
-          example: "2024-01-01T00:00:00Z"
-        - name: to_date
-          in: query
-          description: End date for transaction filter (ISO 8601)
-          required: false
-          schema:
-            type: string
-            format: date-time
-          example: "2024-01-31T23:59:59Z"
-      responses:
-        '200':
-          description: Transactions retrieved successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/WebResponse'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/TransactionPageResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  
-  /api/external/transactions:
-    get:
-      tags:
-        - Transactions
-      summary: Get user transaction history (External API)
       description: |
         Retrieve paginated list of user's historical transactions with optional filtering.
         This endpoint is for external services with API key authentication.

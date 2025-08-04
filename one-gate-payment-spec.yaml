@@ -1,0 +1,215 @@
+openapi: 3.0.0
+info:
+  title: One Gate Payment
+  version: 1.0.0
+  description: ''
+servers:
+  - url: kong-proxy-one-gate-payment.apps.ocp-one-gate-payment.skynux.fun
+  - url: gopay-service-external-services.apps.ocp-one-gate-payment.skynux.fun
+  - url: shopee-pay-service-external-services.apps.ocp-one-gate-payment.skynux.fun
+paths:
+  /api/auth/login:
+    parameters: [ ]
+    post:
+      summary: login
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+  /api/auth/refresh:
+    parameters: [ ]
+    put:
+      summary: refresh token
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+  /api/payment/account:
+    parameters: [ ]
+    get:
+      summary: get account
+      parameters: [ ]
+      responses: { }
+  /api/payment/balance:
+    parameters: [ ]
+    get:
+      summary: get balance
+      parameters: [ ]
+      responses: { }
+  /api/payment/wallet:
+    parameters: [ ]
+    get:
+      summary: get balance wallet
+      parameters:
+        - name: ewallet
+          in: query
+          required: false
+          example: SHOPEE_PAY
+          schema:
+            type: string
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+  /api/payment/wallet/topup:
+    parameters: [ ]
+    post:
+      summary: topup
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                payment_method:
+                  type: string
+                phone_number:
+                  type: string
+                  format: utc-millisec
+                description:
+                  type: string
+  /api/transaction/histories:
+    parameters: [ ]
+    get:
+      summary: get histories
+      parameters:
+        - name: page
+          in: query
+          required: false
+          example: '1'
+          schema:
+            type: integer
+        - name: size
+          in: query
+          required: false
+          example: '10'
+          schema:
+            type: integer
+        - name: x-api-key
+          in: header
+          required: false
+          example: a1b2c3d4-e5f6-4789-abcd-ef0123456789
+          schema:
+            type: string
+      responses: { }
+  /api/transaction/histories/ef67dac3-f8f4-4a0c-a59b-39759cf5744e:
+    parameters: [ ]
+    get:
+      summary: get history by id
+      parameters:
+        - name: x-api-key
+          in: header
+          required: false
+          example: a1b2c3d4-e5f6-4789-abcd-ef0123456789
+          schema:
+            type: string
+      responses: { }
+  /gopay/auth/token:
+    parameters: [ ]
+    post:
+      summary: auth
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+  /gopay/wallet/topup:
+    parameters: [ ]
+    post:
+      summary: topup
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet_id:
+                  type: string
+                  format: utc-millisec
+                amount:
+                  type: integer
+                payment_method:
+                  type: string
+                reference_id:
+                  type: string
+  /gopay/wallet/balance:
+    parameters: [ ]
+    get:
+      summary: get balance
+      parameters:
+        - name: wallet_id
+          in: query
+          required: false
+          example: '898082181707745'
+          schema:
+            type: integer
+      responses: { }
+  /v2/shopeepay/authentication:
+    parameters: [ ]
+    post:
+      summary: auth
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                merchant_id:
+                  type: string
+                api_key:
+                  type: string
+                signature:
+                  type: string
+                timestamp:
+                  type: integer
+  /v2/shopeepay/wallet/topup:
+    parameters: [ ]
+    post:
+      summary: topup
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+  /v2/shopeepay/account/balance:
+    parameters: [ ]
+    post:
+      summary: get balance
+      parameters: [ ]
+      responses: { }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  format: utc-millisec
+                request_id:
+                  type: string
+                include_details:
+                  type: boolean
