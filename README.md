@@ -1,219 +1,238 @@
 ### High Level Architecture (Production)
 ```mermaid
-graph TB
-%% External Users and Systems
-subgraph "External Zone"
-User[👤 End Users<br/>Mobile/Web]
-BankIndonesia[🏛️ Bank Indonesia<br/>API Key Access]
-OJK[⚖️ OJK Financial Authority<br/>API Key Access]
+flowchart TD
 
-subgraph "External E-Wallet Services"
-GopayExternal[💳 GoPay API<br/>api.gopay.com]
-ShopeeExternal[🛒 ShopeePay API<br/>api.shopeepay.com]
-end
-end
+%% ================================
+%% External Zone
+%% ================================
+subgraph ExternalZone["🌍 External Zone"]
+    EndUsers[🧑‍💻 End Users]
+    BankIndonesia[🏛️ Bank Indonesia<br/>API Key Access]
+    OJK[⚖️ OJK Financial Authority<br/>API Key Access]
 
-%% Internet Gateway and CDN
-subgraph "Edge Layer"
-CloudFlare[☁️ CloudFlare CDN<br/>DDoS Protection]
-DNS[🌐 DNS Management<br/>skynux.fun]
+    subgraph EWallet["💳 E-Wallet Services"]
+        GopayExternal[GoPay API]
+        ShopeeExternal[ShopeePay API]
+    end
 end
 
-%% OpenShift Container Platform - Multi-Node
-subgraph "OpenShift Container Platform - GCP Asia-Southeast2 (Multi-Node)"
-direction TB
-
-subgraph "Control Plane (3 Masters)"
-Master1[🎛️ Master Node 1<br/>API Server, etcd]
-Master2[🎛️ Master Node 2<br/>API Server, etcd]
-Master3[🎛️ Master Node 3<br/>API Server, etcd]
+%% ================================
+%% Edge Layer
+%% ================================
+subgraph Edge["☁️ Edge Layer"]
+    CloudFlare[CloudFlare CDN<br/>DDoS Protection]
+    DNS[DNS Management<br/>skynux.fun]
 end
 
-subgraph "Worker Nodes (3 Workers)"
-Worker1[💼 Worker Node 1<br/>Application Pods]
-Worker2[💼 Worker Node 2<br/>Application Pods]
-Worker3[💼 Worker Node 3<br/>Application Pods]
+%% ================================
+%% OpenShift Platform
+%% ================================
+subgraph OpenShift["🏗️ OpenShift Platform (GCP Southeast Asia)"]
+    direction TB
+
+    subgraph ControlPlane["🎛️ Control Plane (3 Masters)"]
+        Master1[Master Node 1]
+        Master2[Master Node 2]
+        Master3[Master Node 3]
+    end
+
+    subgraph Workers["💼 Worker Nodes"]
+        Worker1[Worker Node 1]
+        Worker2[Worker Node 2]
+        Worker3[Worker Node 3]
+    end
+
+    subgraph Ingress["🔀 Ingress Layer"]
+        Router[OpenShift Router<br/>HAProxy]
+        Kong[Kong API Gateway<br/>Rate Limit, Auth]
+    end
+
+    subgraph Frontend["🌐 Frontend"]
+        WebApp[Web Application]
+    end
+
+    subgraph Microservices["🔧 Microservices"]
+        AuthService[Authentication Service]
+        PaymentService[Payment Service]
+        TransactionService[Transaction Service]
+    end
+
+    subgraph DataLayer["🗄️ Data & Storage"]
+        Postgres[PostgreSQL Cluster]
+        Redis[Redis Cluster]
+        Kafka[Kafka Cluster]
+    end
+
+    subgraph Observability["📊 Observability Stack"]
+        Otel[OpenTelemetry Collector]
+        Prometheus[Prometheus]
+        Grafana[Grafana]
+        Loki[Loki]
+        Tempo[Tempo]
+    end
+
+    subgraph DevOps["🔧 DevOps Tools"]
+        Jenkins[Jenkins CI/CD]
+        SonarQube[SonarQube]
+        KafkaUI[Kafka UI]
+    end
 end
 
-%% Ingress Layer
-subgraph "Ingress & Gateway"
-Router[🔀 OpenShift Router<br/>HAProxy Ingress]
-Kong[🦍 Kong API Gateway<br/>Rate Limiting, Auth]
-end
-
-%% Application Services
-subgraph "Microservices Layer"
-AuthService[🔐 Authentication Service<br/>JWT, Refresh Tokens]
-PaymentService[💰 Payment Service<br/>Balance, Topup]
-TransactionService[📊 Transaction Service<br/>History, Reports]
-end
-
-%% Data Layer
-subgraph "Data & Storage"
-PostgresCluster[🐘 PostgreSQL Cluster<br/>Primary DB]
-RedisCluster[⚡ Redis Cluster<br/>Session & Cache]
-KafkaCluster[📨 Kafka Cluster<br/>Event Streaming]
-end
-
-%% Observability Stack
-subgraph "Observability & Monitoring"
-Prometheus[📊 Prometheus<br/>Metrics Collection]
-Grafana[📈 Grafana<br/>Dashboards]
-Loki[📝 Loki<br/>Log Aggregation]
-Tempo[🔍 Tempo<br/>Distributed Tracing]
-OtelCol[📡 OpenTelemetry<br/>Collector]
-end
-
-%% DevOps Tools
-subgraph "DevOps & CI/CD"
-Jenkins[🔧 Jenkins<br/>CI/CD Pipeline]
-SonarQube[🔍 SonarQube<br/>Code Quality]
-KafkaUI[📺 Kafka UI<br/>Stream Monitoring]
-end
-end
-
+%% ================================
 %% Connections
-User --> CloudFlare
+%% ================================
+
+%% End user path
+EndUsers --> WebApp
+WebApp --> CloudFlare
+CloudFlare --> DNS --> Router --> Kong
+
+%% Bank Indonesia and OJK APIs
 BankIndonesia --> CloudFlare
 OJK --> CloudFlare
-CloudFlare --> DNS
-DNS --> Router
-Router --> Kong
 
+%% Routing to microservices
 Kong --> AuthService
 Kong --> PaymentService
 Kong --> TransactionService
 
-AuthService --> PostgresCluster
-PaymentService --> PostgresCluster
-PaymentService --> RedisCluster
-PaymentService --> KafkaCluster
-TransactionService --> PostgresCluster
-TransactionService --> RedisCluster
-TransactionService --> KafkaCluster
+%% Microservices data access
+AuthService --> Postgres
+PaymentService --> Postgres
+PaymentService --> Redis
+PaymentService --> Kafka
+TransactionService --> Postgres
+TransactionService --> Redis
+TransactionService --> Kafka
 
-%% External service calls (outbound from cluster)
+%% External service integration
 PaymentService --> GopayExternal
 PaymentService --> ShopeeExternal
 
-%% Observability connections
-AuthService -.-> OtelCol
-PaymentService -.-> OtelCol
-TransactionService -.-> OtelCol
-OtelCol --> Prometheus
-OtelCol --> Loki
-OtelCol --> Tempo
-Prometheus --> Grafana
-Loki --> Grafana
-Tempo --> Grafana
+%% Observability
+AuthService -.-> Otel
+PaymentService -.-> Otel
+TransactionService -.-> Otel
+Otel --> Prometheus --> Grafana
+Otel --> Loki --> Grafana
+Otel --> Tempo --> Grafana
 
-%% DevOps connections
+%% DevOps tools
 Jenkins -.-> SonarQube
-KafkaCluster -.-> KafkaUI
+Kafka -.-> KafkaUI
 ```
 
 ### High Level Architecture (Development)
 ```mermaid
-graph TB
-    %% External Users and Systems
-    subgraph "External Zone"
-        User[👤 End Users<br/>Mobile/Web]
-        BankIndonesia[🏛️ Bank Indonesia<br/>API Key Access]
-        OJK[⚖️ OJK Financial Authority<br/>API Key Access]
-        
-        subgraph "External E-Wallet Services"
-            GopayExternal[💳 GoPay API<br/>api.gopay.com]
-            ShopeeExternal[🛒 ShopeePay API<br/>api.shopeepay.com]
-        end
+flowchart TD
+
+%% ================================
+%% 🌍 External Zone
+%% ================================
+subgraph ExternalZone["🌍 External Zone"]
+    EndUsers[🧑‍💻 End Users]
+    BankIndonesia[🏛️ Bank Indonesia<br/>API Key Access]
+    OJK[⚖️ OJK Financial Authority<br/>API Key Access]
+
+    subgraph EWallet["💳 External E-Wallet Services"]
+        GopayExternal[GoPay API<br/>api.gopay.com]
+        ShopeeExternal[ShopeePay API<br/>api.shopeepay.com]
+    end
+end
+
+%% ================================
+%% 🌐 DNS Layer (Direct)
+%% ================================
+subgraph DNSLayer["🌐 DNS Layer"]
+    DNS[DNS Management<br/>skynux.fun<br/>Direct Resolution]
+end
+
+%% ================================
+%% 🏗️ OpenShift - Single Node
+%% ================================
+subgraph OpenShift["🏗️ OpenShift Platform (Single Node - GCP SEA)"]
+    direction TB
+
+    subgraph AllInOne["🎯 All-in-One Node"]
+        SingleNode[Master + Worker<br/>Control Plane + App Pods]
     end
 
-    %% Direct DNS (No CloudFlare)
-    subgraph "DNS Layer"
-        DNS[🌐 DNS Management<br/>skynux.fun<br/>Direct Resolution]
+    subgraph Ingress["🔀 Ingress & Gateway"]
+        Router[OpenShift Router<br/>HAProxy]
+        Kong[Kong API Gateway<br/>Rate Limit, Auth]
     end
 
-    %% OpenShift Container Platform - Single Node
-    subgraph "OpenShift Container Platform - GCP Asia-Southeast2 (Single Node)"
-        direction TB
-        
-        subgraph "All-in-One Node"
-            SingleNode[🎯 Single Node<br/>Master + Worker<br/>Control Plane + Apps]
-        end
-        
-        %% Ingress Layer
-        subgraph "Ingress & Gateway"
-            Router[🔀 OpenShift Router<br/>HAProxy Ingress]
-            Kong[🦍 Kong API Gateway<br/>Rate Limiting, Auth]
-        end
-
-        %% Application Services
-        subgraph "Microservices Layer"
-            AuthService[🔐 Authentication Service<br/>JWT, Refresh Tokens]
-            PaymentService[💰 Payment Service<br/>Balance, Topup]
-            TransactionService[📊 Transaction Service<br/>History, Reports]
-        end
-
-        %% Data Layer
-        subgraph "Data & Storage"
-            PostgresSingle[🐘 PostgreSQL Single<br/>Primary DB]
-            RedisSingle[⚡ Redis Single<br/>Session & Cache]
-            KafkaSingle[📨 Kafka Single<br/>Event Streaming]
-        end
-
-        %% Observability Stack
-        subgraph "Observability & Monitoring"
-            Prometheus[📊 Prometheus<br/>Metrics Collection]
-            Grafana[📈 Grafana<br/>Dashboards]
-            Loki[📝 Loki<br/>Log Aggregation]
-            Tempo[🔍 Tempo<br/>Distributed Tracing]
-            OtelCol[📡 OpenTelemetry<br/>Collector]
-        end
-
-        %% DevOps Tools
-        subgraph "DevOps & CI/CD"
-            Jenkins[🔧 Jenkins<br/>CI/CD Pipeline]
-            SonarQube[🔍 SonarQube<br/>Code Quality]
-            KafkaUI[📺 Kafka UI<br/>Stream Monitoring]
-        end
+    subgraph Frontend["🌐 Frontend Layer"]
+        WebApp[Web Application]
     end
 
-    %% Connections (Direct, No CloudFlare)
-    User --> DNS
-    BankIndonesia --> DNS
-    OJK --> DNS
-    DNS --> Router
-    Router --> Kong
-    
-    Kong --> AuthService
-    Kong --> PaymentService
-    Kong --> TransactionService
+    subgraph Microservices["🔧 Microservices"]
+        AuthService[Authentication Service]
+        PaymentService[Payment Service]
+        TransactionService[Transaction Service]
+    end
 
-    AuthService --> PostgresSingle
-    PaymentService --> PostgresSingle
-    PaymentService --> RedisSingle
-    PaymentService --> KafkaSingle
-    TransactionService --> PostgresSingle
-    TransactionService --> RedisSingle
-    TransactionService --> KafkaSingle
+    subgraph Data["🗄️ Data & Storage"]
+        Postgres[PostgreSQL<br/>Single Instance]
+        Redis[Redis<br/>Single Instance]
+        Kafka[Kafka<br/>Single Instance]
+    end
 
-    %% External service calls (outbound from cluster)
-    PaymentService --> GopayExternal
-    PaymentService --> ShopeeExternal
+    subgraph Observability["📊 Observability"]
+        Otel[OpenTelemetry Collector]
+        Prometheus[Prometheus]
+        Grafana[Grafana]
+        Loki[Loki]
+        Tempo[Tempo]
+    end
 
-    %% Observability connections
-    AuthService -.-> OtelCol
-    PaymentService -.-> OtelCol
-    TransactionService -.-> OtelCol
-    OtelCol --> Prometheus
-    OtelCol --> Loki
-    OtelCol --> Tempo
-    Prometheus --> Grafana
-    Loki --> Grafana
-    Tempo --> Grafana
+    subgraph DevOps["🔧 DevOps Tools"]
+        Jenkins[Jenkins CI/CD]
+        SonarQube[SonarQube]
+        KafkaUI[Kafka UI]
+    end
+end
 
-    %% DevOps connections
-    Jenkins -.-> SonarQube
-    KafkaSingle -.-> KafkaUI
+%% ================================
+%% 🔗 Connections
+%% ================================
+
+%% External access to frontend
+EndUsers --> WebApp
+WebApp --> DNS
+BankIndonesia --> DNS
+OJK --> DNS
+DNS --> Router --> Kong
+
+%% Kong routes to microservices
+Kong --> AuthService
+Kong --> PaymentService
+Kong --> TransactionService
+
+%% Microservices to data
+AuthService --> Postgres
+PaymentService --> Postgres
+PaymentService --> Redis
+PaymentService --> Kafka
+TransactionService --> Postgres
+TransactionService --> Redis
+TransactionService --> Kafka
+
+%% External API calls
+PaymentService --> GopayExternal
+PaymentService --> ShopeeExternal
+
+%% Observability
+AuthService -.-> Otel
+PaymentService -.-> Otel
+TransactionService -.-> Otel
+Otel --> Prometheus --> Grafana
+Otel --> Loki --> Grafana
+Otel --> Tempo --> Grafana
+
+%% DevOps Tools
+Jenkins -.-> SonarQube
+Kafka -.-> KafkaUI
 ```
 
 ### ERD
